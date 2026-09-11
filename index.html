@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小動物情緒偵探局</title>
+    <style>
+        /* 基礎設定與可愛風設計 */
+        body {
+            font-family: 'Comic Sans MS', '微軟正黑體', sans-serif;
+            background-color: #fff0f5;
+            color: #5a3a31;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(255, 182, 193, 0.4);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        .hidden { display: none !important; }
+        h1 { color: #ff85a2; font-size: 2.2em; margin-bottom: 10px; }
+        h2 { color: #ff85a2; }
+        p { font-size: 1.1em; line-height: 1.6; }
+
+        /* 按鈕設計 */
+        .btn-primary {
+            background-color: #ffb6c1;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 15px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background-color: #ff9fb0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background-color: #e6f7ff;
+            color: #4a4a4a;
+            border: 2px solid #b3e0ff;
+            padding: 15px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .option-btn:hover {
+            background-color: #b3e0ff;
+            transform: scale(1.02);
+        }
+
+        /* 線索區塊與圖片設計 */
+        .clue-box {
+            background-color: #fff9e6;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 2px dashed #ffda73;
+        }
+
+        .animal-img {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 16px;
+            margin: 15px auto 0 auto;
+            display: block;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .progress {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #88ced3;
+            margin-bottom: 15px;
+        }
+
+        /* 彈出視窗 (Modal) 設計 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px; box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: white; padding: 30px; border-radius: 24px;
+            max-width: 500px; width: 100%; text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            animation: popIn 0.4s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .correct-text { color: #4caf50; font-size: 1.8em; margin: 0 0 10px 0;}
+        .wrong-text { color: #f44336; font-size: 1.8em; margin: 0 0 10px 0;}
+        
+        .explanation-text {
+            background-color: #f1f8e9; padding: 15px; border-radius: 15px;
+            text-align: left; margin-top: 15px; font-size: 1.05em; color: #33691e;
+        }
+
+        @media (min-width: 600px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+
+    <!-- 主容器 -->
+    <div class="container">
+        
+        <!-- 【1. 開始畫面】 -->
+        <div id="start-screen">
+            <h1>🐾 小動物情緒偵探局 🐾</h1>
+            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=detective&backgroundColor=ffb6c1" alt="局長圖示" style="width: 120px; height: 120px; border-radius: 50%; margin: 10px auto; background-color: #ffb6c1;">
+            <p><strong>局長引言：</strong></p>
+            <p>「歡迎來到『小動物情緒偵探局』！我是局長。今天我們收到了幾個小動物的求助信，牠們不知道自己怎麼了。<br><br>
+            請各位小偵探仔細觀察<strong>圖片中牠們的面部表情和身體動作</strong>，從選項中找出最準確的『心情詞語』，幫牠們的情緒命名吧！準備好了嗎？我們出發！」</p>
+            <button class="btn-primary" onclick="startGame()">🔍 開始辦案</button>
+        </div>
+
+        <!-- 【2. 遊戲畫面】 -->
+        <div id="game-screen" class="hidden">
+            <div class="progress" id="progress-text">案件 1 / 10</div>
+            <h2 id="animal-name">小動物名稱</h2>
+            
+            <div class="clue-box">
+                <p id="situation-text">情境描述...</p>
+                <img id="animal-image" class="animal-img" src="" alt="小動物情境圖">
+            </div>
+
+            <p><strong>請選擇牠當下的心情：</strong></p>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <!-- 【3. 結算畫面】 -->
+        <div id="end-screen" class="hidden">
+            <h1>🎉 恭喜結案！ 🎉</h1>
+            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=winner&backgroundColor=ffd700" alt="勝利圖示" style="width: 120px; height: 120px; border-radius: 50%; margin: 10px auto; background-color: #ffd700;">
+            <h2 id="final-score-title">超級情緒小偵探</h2>
+            <p id="final-score-text">你總共答對了 X 題！</p>
+            <p>你已經學會觀察身體的訊號了，下次自己有情緒時，也要記得當自己的情緒偵探喔！</p>
+            <button class="btn-primary" onclick="restartGame()">🔄 再玩一次</button>
+        </div>
+
+    </div>
+
+    <!-- 【彈出視窗：回饋與覺察畫面】 -->
+    <div id="feedback-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="feedback-title" class="correct-text">⭕ 答對了！</h2>
+            <div class="explanation-text">
+                <strong>🔍 偵探解答與覺察引導：</strong>
+                <p id="explanation-text">這裡顯示解答和覺察學習...</p>
+            </div>
+            <button class="btn-primary" onclick="nextQuestion()">前往下一案 ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🎵 音效系統 (使用內建 Web Audio API 生成)
+        // ==========================================
+        let audioCtx;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                // 點擊聲 (短促的波聲)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } 
+            else if (type === 'correct') {
+                // 答對聲 (兩聲高音 叮叮!)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.setValueAtTime(1200, now + 0.1); // 第二個音
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } 
+            else if (type === 'wrong') {
+                // 答錯聲 (低沈的嘟聲)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+            else if (type === 'win') {
+                // 過關聲 (連續向上的慶祝音)
+                const notes = [440, 554, 659, 880]; // 和弦音
+                notes.forEach((freq, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    o.type = 'sine';
+                    o.frequency.value = freq;
+                    g.gain.setValueAtTime(0.2, now + i * 0.15);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.3);
+                    o.start(now + i * 0.15);
+                    o.stop(now + i * 0.15 + 0.3);
+                });
+            }
+        }
+
+        // ==========================================
+        // 🎮 遊戲資料與邏輯
+        // ==========================================
+        const questions = [
+            {
+                "id": 1, "image": "pic1.png", "animal": "🐰 發抖的小兔兔",
+                "situation": "小兔兔站在一個黑漆漆的山洞前，山洞裏傳來奇怪的聲音。",
+                "options": ["(A) 興奮", "(B) 害怕", "(C) 生氣", "(D) 期待"], "answer": 1,
+                "explanation": "答案是 (B) 害怕。當我們感到「害怕」時，身體會啟動警報系統。發抖、心跳加速，都是身體在提醒我們要注意安全。你可以深呼吸告訴自己沒事。"
+            },
+            {
+                "id": 2, "image": "pic2.png", "animal": "🐻 氣噗噗的小熊",
+                "situation": "胖嘟嘟的小熊發現，自己珍藏了一個月的蜂蜜罐，居然被別人吃光了！",
+                "options": ["(A) 驚訝", "(B) 傷心", "(C) 憤怒 / 生氣", "(D) 平靜"], "answer": 2,
+                "explanation": "答案是 (C) 憤怒 / 生氣。當我們感到「憤怒」時，身體就像快煮沸的熱水壼。拳頭緊握、臉發熱，代表界線被破壞。這時需要先離開現場冷靜一下。"
+            },
+            {
+                "id": 3, "image": "pic3.png", "animal": "🐶 垂下耳朵的小黃狗",
+                "situation": "小黃狗本來約好今天要跟朋友去草地奔跑，結果外面卻下起了超級大雨。",
+                "options": ["(A) 失望 / 難過", "(B) 快樂", "(C) 緊張", "(D) 嫉妒"], "answer": 0,
+                "explanation": "答案是 (A) 失望 / 難過。期待落空時，身體會變得沒力氣、重重的。這是身體在告訴我們：「你需要休息，也需要一個温暖的擁抱。」"
+            },
+            {
+                "id": 4, "image": "pic4.png", "animal": "🐧 坐立難安的小企鵝",
+                "situation": "小企鵝等一下就要上台表演唱歌了，台下坐着好多好多觀眾。",
+                "options": ["(A) 自信", "(B) 疲倦", "(C) 緊張 / 焦慮", "(D) 驚喜"], "answer": 2,
+                "explanation": "答案是 (C) 緊張 / 焦慮。肚子痛、想上廁所、手腳冰冷，都是身體在幫你準備上場的預備狀態！你可以告訴自己：「原來我是緊張了。」"
+            },
+            {
+                "id": 5, "image": "pic5.png", "animal": "🐱 輕飄飄的小橘貓",
+                "situation": "小橘貓一回家，就聞到媽媽烤了牠最喜歡的超級無敵大魚餅乾！",
+                "options": ["(A) 害羞", "(B) 興奮 / 開心", "(C) 委屈", "(D) 害怕"], "answer": 1,
+                "explanation": "答案是 (B) 興奮 / 開心。想跳躍、感覺身體變輕，代表身體充滿能量！你可以享受這種感覺，並開心地表達出來。"
+            },
+            {
+                "id": 6, "image": "pic6.png", "animal": "🦝 眼淚打轉的小浣熊",
+                "situation": "黑板被亂畫，老師以為是小浣熊畫的，但其實小浣熊根本沒有做這件事！",
+                "options": ["(A) 開心", "(B) 委屈", "(C) 害怕", "(D) 輕鬆"], "answer": 1,
+                "explanation": "答案是 (B) 委屈。被誤會時，身體會出現喉嚨酸酸緊緊的反應。下次可以勇敢舉手說：「我覺得很委屈，你可以聽我解釋嗎？」"
+            },
+            {
+                "id": 7, "image": "pic7.png", "animal": "🦔 咬指甲的小刺蝟",
+                "situation": "小刺蝟明天要交重要的視藝作品，可是牠把剪刀和彩色手工紙遺留在學校了！",
+                "options": ["(A) 擔心", "(B) 生氣", "(C) 自信", "(D) 興奮"], "answer": 0,
+                "explanation": "答案是 (A) 擔心。對未發生的事感到不安，身體會出現咬指甲、睡不着的訊號。可以試着把擔心的事寫下來，或請大人幫忙想辦法。"
+            },
+            {
+                "id": 8, "image": "pic8.png", "animal": "🐒 停不下來的小猴子",
+                "situation": "明天就是小猴子期待已久的「戶外學習活動」了！",
+                "options": ["(A) 難過", "(B) 疲倦", "(C) 興奮", "(D) 焦慮"], "answer": 2,
+                "explanation": "答案是 (C) 興奮。這是強烈的快樂，講話大聲、坐不住是因為裝滿了開心的能量。但也要記得深呼吸，注意安全不要撞到別人啊！"
+            },
+            {
+                "id": 9, "image": "pic9.png", "animal": "🐿️ 抓耳朵的小松鼠",
+                "situation": "明天要期終考試，小松鼠看着像山一樣高的課本，不知道該從哪裏開始温習，時間快不夠了！",
+                "options": ["(A) 焦慮", "(B) 開心", "(C) 驚訝", "(D) 無聊"], "answer": 0,
+                "explanation": "答案是 (A) 焦慮。覺得事情太多做不完時，身體會發出胸悶、抓頭髮的警告。請先停下來喝口水告訴自己：「沒關係，一件一件慢慢來。」"
+            },
+            {
+                "id": 10, "image": "pic10.png", "animal": "🐑 跺腳的小綿羊",
+                "situation": "小綿羊疊好的超高紙牌屋，被同學不小心撞倒，而且同學沒道歉就跑走了！",
+                "options": ["(A) 生氣又難過", "(B) 只有難過", "(C) 只有期待", "(D) 只有無聊"], "answer": 0,
+                "explanation": "答案是 (A) 生氣又難過。情緒常常不只一種！心血被破壞會生氣（跺腳），但紙牌屋沒了也會難過（想哭）。能同時察覺兩種情緒，你就變成了超級情緒偵探！"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const progressText = document.getElementById('progress-text');
+        const animalName = document.getElementById('animal-name');
+        const situationText = document.getElementById('situation-text');
+        const animalImage = document.getElementById('animal-image');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const explanationText = document.getElementById('explanation-text');
+
+        function startGame() {
+            playSound('click'); // 播放點擊音效
+            currentQuestionIndex = 0;
+            score = 0;
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            progressText.innerText = `🕵️ 案件 ${currentQuestionIndex + 1} / ${questions.length}`;
+            animalName.innerText = q.animal;
+            situationText.innerText = q.situation;
+            animalImage.src = q.image;
+
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = questions[currentQuestionIndex];
+            const isCorrect = (selectedIndex === q.answer);
+
+            if (isCorrect) {
+                playSound('correct'); // 播放答對音效
+                score++;
+                feedbackTitle.innerText = "⭕ 答對了！太厲害了！";
+                feedbackTitle.className = "correct-text";
+            } else {
+                playSound('wrong'); // 播放答錯音效
+                feedbackTitle.innerText = "❌ 哎呀，差一點點！";
+                feedbackTitle.className = "wrong-text";
+            }
+
+            explanationText.innerText = q.explanation;
+            feedbackModal.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click'); // 播放點擊音效
+            feedbackModal.classList.add('hidden');
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        function showEndScreen() {
+            playSound('win'); // 播放過關音效
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            const scoreText = document.getElementById('final-score-text');
+            scoreText.innerText = `你總共答對了 ${score} 題 (滿分 ${questions.length} 題)！`;
+
+            const scoreTitle = document.getElementById('final-score-title');
+            if (score === 10) {
+                scoreTitle.innerText = "🏆 傳說中的超級情緒小偵探！";
+            } else if (score >= 7) {
+                scoreTitle.innerText = "🏅 優秀的高級情緒偵探！";
+            } else {
+                scoreTitle.innerText = "🎖️ 潛力十足的見習小偵探！";
+            }
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+    </script>
+</body>
+</html>
